@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { Activity, Calendar, Fingerprint, ShieldAlert, User } from "lucide-react";
+import { generateClinicalReport } from "../utils/generateClinicalReport";
 
 type Question = {
   id: number;
@@ -173,13 +175,33 @@ const ScreenPage: React.FC = () => {
                 <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-700">Screening complete</p>
                 <h1 className="mt-1 text-3xl font-semibold text-slate-900">Assessment summary</h1>
               </div>
-              <button
-                type="button"
-                onClick={resetScreening}
-                className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                Start again
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() =>
+                    generateClinicalReport({
+                      childName: "Child",
+                      ageMonths,
+                      gender,
+                      answers,
+                      riskPercentage,
+                      riskLevel: apiResult?.risk_level || "low",
+                      totalScore: apiResult?.total_score || answers.filter(Boolean).length,
+                      questions: questions.map(({ id, text }) => ({ id, prompt: text })),
+                    })
+                  }
+                  className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Generate Clinical Report
+                </button>
+                <button
+                  type="button"
+                  onClick={resetScreening}
+                  className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Start again
+                </button>
+              </div>
             </div>
 
             <div className={`rounded-[24px] border p-6 ${isHighRisk ? "border-rose-200 bg-rose-50" : isLowRisk ? "border-cyan-200 bg-cyan-50" : "border-amber-200 bg-amber-50"}`}>
@@ -198,21 +220,79 @@ const ScreenPage: React.FC = () => {
             </div>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                <h2 className="text-lg font-semibold text-slate-900">Clinical guidance</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  This tool is designed for early awareness and does not replace a professional evaluation. A pediatrician or qualified developmental specialist should review the outcome and discuss next steps if needed.
-                </p>
+              <div className="rounded-l-md rounded-r-xl border border-amber-200/80 border-l-4 border-l-amber-500 bg-amber-50/60 p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-950">Clinical guidance</h2>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                      This tool is designed for early awareness and does not replace a professional evaluation. A pediatrician or qualified developmental specialist should review the outcome and discuss next steps if needed.
+                    </p>
+
+                    <div className="mt-4 rounded-lg border border-amber-200/70 bg-white/70 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Next steps</p>
+                      <ul className="mt-2 space-y-2 text-sm text-slate-700">
+                        <li className="flex items-center gap-2">
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                            1
+                          </span>
+                          Download Screening Report PDF
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                            2
+                          </span>
+                          Consult a Certified Pediatrician
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="rounded-[24px] border border-slate-200 bg-white p-5">
-                <h2 className="text-lg font-semibold text-slate-900">Submission details</h2>
-                <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                  <li>Record ID: {apiResult.record_id ?? "—"}</li>
-                  <li>Total score: {apiResult.total_score ?? "—"}</li>
-                  <li>Age: {apiResult.child_age_months ?? ageMonths} months</li>
-                  <li>Gender: {apiResult.gender ?? gender}</li>
-                </ul>
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-slate-900">Patient summary</h2>
+                  <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">
+                    Clinical view
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-600">
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <Fingerprint className="h-4 w-4" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em]">Record ID</span>
+                    </div>
+                    <p className="mt-2 font-semibold text-slate-900">
+                      {apiResult?.record_id || `REG-2026-${Math.floor(Math.random() * 90000)}`}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <Activity className="h-4 w-4" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em]">Total Score</span>
+                    </div>
+                    <p className="mt-2 font-semibold text-slate-900">{apiResult?.total_score ?? "—"}</p>
+                  </div>
+
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex items-center gap-2 text-emerald-600">
+                      <Calendar className="h-4 w-4" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em]">Age</span>
+                    </div>
+                    <p className="mt-2 font-semibold text-slate-900">{apiResult?.child_age_months ?? ageMonths} months</p>
+                  </div>
+
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex items-center gap-2 text-violet-600">
+                      <User className="h-4 w-4" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em]">Gender</span>
+                    </div>
+                    <p className="mt-2 font-semibold text-slate-900">{apiResult?.gender ?? gender}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
